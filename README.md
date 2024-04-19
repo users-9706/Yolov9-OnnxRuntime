@@ -1,4 +1,4 @@
-#Yolov9-OnnxRuntime
+# Yolov9-OnnxRuntime
 git clone https://github.com/WongKinYiu/yolov9.git
-#Export onnx
+# Export onnx
 python export.py --weights yolov9-c.pt --simplify --include "onnx"
