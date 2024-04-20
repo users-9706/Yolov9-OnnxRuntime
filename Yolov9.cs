@@ -118,7 +118,7 @@ namespace Yolov9
                 Rect box = position_boxes[index];
                 Cv2.Rectangle(image, position_boxes[index], new Scalar(0, 0, 255), 2, LineTypes.Link8);
 
-                Cv2.Rectangle(image, new Point(position_boxes[index].TopLeft.X, position_boxes[index].TopLeft.Y - 20),
+Cv2.Rectangle(image, new Point(position_boxes[index].TopLeft.X, position_boxes[index].TopLeft.Y - 20),
                     new Point(position_boxes[index].BottomRight.X, position_boxes[index].TopLeft.Y), new Scalar(0, 255, 255), -1);
                 Console.WriteLine(classes_names[class_ids[index]]);
                 Cv2.PutText(image, classes_names[class_ids[index]],new Point(position_boxes[index].X, position_boxes[index].Y - 5),
