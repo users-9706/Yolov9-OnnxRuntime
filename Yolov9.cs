@@ -111,14 +111,12 @@ namespace Yolov9
             }
             int[] indexes = new int[position_boxes.Count];
             CvDnn.NMSBoxes(position_boxes, confidences, conf_threshold, nms_threshold, out indexes);
-            Console.WriteLine(indexes.Length);
             for (int i = 0; i < indexes.Length; i++)
             {
                 int index = indexes[i];
                 Rect box = position_boxes[index];
                 Cv2.Rectangle(image, position_boxes[index], new Scalar(0, 0, 255), 2, LineTypes.Link8);
-
-Cv2.Rectangle(image, new Point(position_boxes[index].TopLeft.X, position_boxes[index].TopLeft.Y - 20),
+                Cv2.Rectangle(image, new Point(position_boxes[index].TopLeft.X, position_boxes[index].TopLeft.Y - 20),
                     new Point(position_boxes[index].BottomRight.X, position_boxes[index].TopLeft.Y), new Scalar(0, 255, 255), -1);
                 Console.WriteLine(classes_names[class_ids[index]]);
                 Cv2.PutText(image, classes_names[class_ids[index]],new Point(position_boxes[index].X, position_boxes[index].Y - 5),
