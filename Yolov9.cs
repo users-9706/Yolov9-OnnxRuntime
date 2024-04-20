@@ -19,7 +19,6 @@ namespace Yolov9
         {
             string[] class_names;
             List<string> str = new List<string>();
-
             StreamReader sr = new StreamReader(path);
             string line;
             while ((line = sr.ReadLine()) != null)
