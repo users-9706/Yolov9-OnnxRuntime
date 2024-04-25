@@ -10,7 +10,7 @@ classes_names = 'coco.names'
 classes = readClassesNames(classes_names)
 image = cv2.imread('bus.jpg')
 image_height, image_width = image.shape[:2]
-model_path = 'yolov9-c.onnx'
+model_path = 'yolov9c.onnx'
 start_time = cv2.getTickCount()
 session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
 conf_thresold = 0.45
