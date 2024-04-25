@@ -12,3 +12,4 @@ target_link_libraries(Yolov9 "${ONNXRUNTIME_DIR}/lib/onnxruntime.lib")
 find_package(OpenCV REQUIRED)
 target_include_directories(Yolov9 PRIVATE ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(Yolov9 ${OpenCV_LIBS})
+
