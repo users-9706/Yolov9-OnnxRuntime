@@ -20,7 +20,7 @@ string[] read_class_names(string path)
     class_names = str.ToArray();
     return class_names;
 }
-string model_path = "yolov9-c.onnx";
+string model_path = "yolov9c.onnx";
 string image_path = "bus.jpg";
 float conf_threshold = 0.25f;
 float nms_threshold = 0.4f;
