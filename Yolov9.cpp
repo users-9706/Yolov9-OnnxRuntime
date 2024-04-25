@@ -20,14 +20,14 @@ vector<string> readClassNames(const string& filename) {
     file.close();
     return classNames;
 }
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
     string filename = "coco.names";
     vector<string> labels = readClassNames(filename);
     Mat image = imread("bus.jpg");
     int ih = image.rows;
     int iw = image.cols;
-    string onnxpath = "yolov9-c.onnx";
+    string onnxpath = "yolov9c.onnx";
     wstring modelPath = wstring(onnxpath.begin(), onnxpath.end());
     SessionOptions session_options;
     Env env = Env(ORT_LOGGING_LEVEL_ERROR, "yolov9-c");
@@ -39,7 +39,6 @@ int main(int argc, char** argv)
     size_t numOutputNodes = session_.GetOutputCount();
     AllocatorWithDefaultOptions allocator;
     input_node_names.reserve(numInputNodes);
-    // 获取输入信息
     int input_w = 0;
     int input_h = 0;
     for (int i = 0; i < numInputNodes; i++) {
@@ -52,21 +51,19 @@ int main(int argc, char** argv)
         input_h = input_dims[2];
         cout << "input format: NxCxHxW = " << input_dims[0] << "x" << input_dims[1] << "x" << input_dims[2] << "x" << input_dims[3] << endl;
     }
-    // 获取输出信息
     int output_h = 0;
     int output_w = 0;
     TypeInfo output_type_info = session_.GetOutputTypeInfo(0);
     auto output_tensor_info = output_type_info.GetTensorTypeAndShapeInfo();
     auto output_dims = output_tensor_info.GetShape();
-    output_h = output_dims[1]; // 84
-    output_w = output_dims[2]; // 8400
+    output_h = output_dims[1]; 
+    output_w = output_dims[2]; 
     cout << "output format : HxW = " << output_dims[1] << "x" << output_dims[2] << endl;
     for (int i = 0; i < numOutputNodes; i++) {
         auto out_name = session_.GetOutputNameAllocated(i, allocator);
         output_node_names.push_back(out_name.get());
     }
     cout << "input: " << input_node_names[0] << " output: " << output_node_names[0] << endl;
-    // format frame
     int64 start = getTickCount();
     int w = image.cols;
     int h = image.rows;
@@ -74,7 +71,6 @@ int main(int argc, char** argv)
     Mat image_ = Mat::zeros(Size(_max, _max), CV_8UC3);
     Rect roi(0, 0, w, h);
     image.copyTo(image_(roi));
-    // fix bug, boxes consistence!
     float x_factor = image_.cols / static_cast<float>(input_w);
     float y_factor = image_.rows / static_cast<float>(input_h);
     Mat blob = dnn::blobFromImage(image_, 1 / 255.0, Size(input_w, input_h), Scalar(0, 0, 0), true, false);
@@ -91,13 +87,11 @@ int main(int argc, char** argv)
     catch (exception e) {
         cout << e.what() << endl;
     }
-    // output data
     const float* pdata = ort_outputs[0].GetTensorMutableData<float>();
     Mat dout(output_h, output_w, CV_32F, (float*)pdata);
-    Mat det_output = dout.t(); 
+    Mat det_output = dout.t();
     session_options.release();
     session_.release();
-    // post-process
     vector<Rect> boxes;
     vector<int> classIds;
     vector<float> confidences;
@@ -126,7 +120,6 @@ int main(int argc, char** argv)
             confidences.push_back(score);
         }
     }
-    // NMS
     vector<int> indexes;
     dnn::NMSBoxes(boxes, confidences, 0.25, 0.45, indexes);
     for (size_t i = 0; i < indexes.size(); i++) {
@@ -134,12 +127,11 @@ int main(int argc, char** argv)
         int idx = classIds[index];
         rectangle(image, boxes[index], Scalar(0, 0, 255), 2, 8);
         rectangle(image, Point(boxes[index].tl().x, boxes[index].tl().y - 20),
-                  Point(boxes[index].br().x, boxes[index].tl().y), Scalar(0, 255, 255), -1);
+            Point(boxes[index].br().x, boxes[index].tl().y), Scalar(0, 255, 255), -1);
         putText(image, labels[idx], Point(boxes[index].tl().x, boxes[index].tl().y), FONT_HERSHEY_PLAIN, 2.0, Scalar(255, 0, 0), 2, 8);
     }
-    //FPS render it
     float t = (getTickCount() - start) / static_cast<float>(getTickFrequency());
-    putText(image, format("FPS: %.2f", 1/t), Point(20, 40), FONT_HERSHEY_PLAIN, 2.0, Scalar(255, 0, 0), 2, 8);
+    putText(image, format("FPS: %.2f", 1 / t), Point(20, 40), FONT_HERSHEY_PLAIN, 2.0, Scalar(255, 0, 0), 2, 8);
     imshow("YOLOV9-ONNXRUNTIME", image);
     waitKey(0);
     return 0;
