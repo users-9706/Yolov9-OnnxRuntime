@@ -55,7 +55,7 @@ for (bbox, score, label) in zip(xywh2xyxy(boxes[indices]), scores[indices], clas
     cv2.putText(image, f'{cls}', (bbox[0], bbox[1] - 5),
                 cv2.FONT_HERSHEY_PLAIN,2, [225, 0, 0], thickness=2)
 end_time = cv2.getTickCount()
-t = (end_time - start_time)/cv2.getTickFrequency()
+t = (end_time - start_time) / cv2.getTickFrequency()
 fps = 1 / t
 print(f"EStimated FPS: {fps:.2f}")
 cv2.putText(image, 'FPS: {:.2f}'.format(fps), (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, [225, 0, 0], 2, 8);
