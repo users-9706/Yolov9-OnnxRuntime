@@ -15,6 +15,7 @@ start_time = cv2.getTickCount()
 session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
 conf_thresold = 0.45
 iou_threshold = 0.25
+score_thresold = 0.25
 model_inputs = session.get_inputs()
 input_names = [model_inputs[i].name for i in range(len(model_inputs))]
 input_shape = model_inputs[0].shape
@@ -29,8 +30,8 @@ input_tensor = input_image[np.newaxis, :, :, :].astype(np.float32)
 outputs = session.run(output_names, {input_names[0]: input_tensor})[0]
 predictions = np.squeeze(outputs).T
 scores = np.max(predictions[:, 4:], axis=1)
-predictions = predictions[scores > conf_thresold, :]
-scores = scores[scores > conf_thresold]
+predictions = predictions[scores > score_thresold, :]
+scores = scores[scores > score_thresold]
 class_ids = np.argmax(predictions[:, 4:], axis=1)
 boxes = predictions[:, :4]
 input_shape = np.array([input_width, input_height, input_width, input_height])
@@ -55,8 +56,8 @@ for (bbox, score, label) in zip(xywh2xyxy(boxes[indices]), scores[indices], clas
     cv2.putText(image, f'{cls}', (bbox[0], bbox[1] - 5),
                 cv2.FONT_HERSHEY_PLAIN,2, [225, 0, 0], thickness=2)
 end_time = cv2.getTickCount()
-t = (end_time - start_time) / cv2.getTickFrequency()
-fps = 1 / t
+t = (end_time - start_time)/cv2.getTickFrequency()
+fps = 1/t
 print(f"EStimated FPS: {fps:.2f}")
 cv2.putText(image, 'FPS: {:.2f}'.format(fps), (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, [225, 0, 0], 2, 8);
 cv2.imshow("YOLOV9-ONNXRUNTIME", image)
