@@ -2,7 +2,7 @@ using OpenCvSharp;
 using OpenCvSharp.Dnn;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
-float sigmoid(float a)
+static float sigmoid(float a)
 {
     float b = 1.0f / (1.0f + (float)Math.Exp(-a));
     return b;
@@ -24,8 +24,8 @@ string model_path = "yolov9c.onnx";
 string image_path = "bus.jpg";
 float conf_threshold = 0.25f;
 float nms_threshold = 0.4f;
-Mat image = new Mat(image_path);
-Mat image_copy = image.Clone();
+float scores_threshold = 0.25f;
+Mat image = Cv2.ImRead(image_path);
 string[] classes_names = read_class_names("coco.names");
 int max_image_length = image.Cols > image.Rows ? image.Cols : image.Rows;
 Mat max_image = Mat.Zeros(new OpenCvSharp.Size(max_image_length, max_image_length), MatType.CV_8UC3);
@@ -35,13 +35,25 @@ SessionOptions options = new SessionOptions();
 options.LogSeverityLevel = OrtLoggingLevel.ORT_LOGGING_LEVEL_INFO;
 options.AppendExecutionProvider_CPU(0);
 InferenceSession onnx_session = new InferenceSession(model_path, options);
+int[] inputshape = { };
+int[] outputshape = { };
+var inputmetadata = onnx_session.InputMetadata;
+var outputmetadata = onnx_session.OutputMetadata;
+foreach (var item in inputmetadata)
+{
+    inputshape = item.Value.Dimensions;
+}
+foreach (var item in outputmetadata)
+{
+    outputshape = item.Value.Dimensions;
+}
 Mat image_rgb = new Mat();
 Cv2.CvtColor(max_image, image_rgb, ColorConversionCodes.BGR2RGB);
 Mat resize_image = new Mat();
-Cv2.Resize(image_rgb, resize_image, new OpenCvSharp.Size(640, 640));
+Cv2.Resize(image_rgb, resize_image, new OpenCvSharp.Size(inputshape[2], inputshape[3]));
 long start = Cv2.GetTickCount();
-float[] result_array = new float[8400 * 84];
-Tensor<float> input_tensor = new DenseTensor<float>(new[] { 1, 3, 640, 640 });
+float[] result_array = new float[outputshape[2] * outputshape[1]];
+Tensor<float> input_tensor = new DenseTensor<float>(new[] { inputshape[0], inputshape[1], inputshape[2], inputshape[3] });
 for (int y = 0; y < resize_image.Height; y++)
 {
     for (int x = 0; x < resize_image.Width; x++)
@@ -63,11 +75,11 @@ image_rgb.Dispose();
 List<string> classes = new List<string>();
 List<float> scores = new List<float>();
 List<Rect> rects = new List<Rect>();
-Mat result_data = new Mat(84, 8400, MatType.CV_32F, result_array);
+Mat result_data = new Mat(outputshape[1], outputshape[2], MatType.CV_32F, result_array);
 result_data = result_data.T();
 float[] factors = new float[2];
 factors = new float[2];
-factors[0] = factors[1] = (float)(max_image_length / 640.0);
+factors[0] = factors[1] = (float)(max_image_length / (float)inputshape[3]);
 List<Rect> position_boxes = new List<Rect>();
 List<int> class_ids = new List<int>();
 List<float> confidences = new List<float>();
@@ -78,7 +90,7 @@ for (int i = 0; i < result_data.Rows; i++)
     double max_score, min_score;
     Cv2.MinMaxLoc(classes_scores, out min_score, out max_score,
         out min_classId_point, out max_classId_point);
-    if (max_score > 0.25)
+    if (max_score > scores_threshold)
     {
         float cx = result_data.At<float>(i, 0);
         float cy = result_data.At<float>(i, 1);
