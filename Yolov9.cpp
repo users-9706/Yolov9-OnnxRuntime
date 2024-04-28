@@ -28,6 +28,9 @@ int main(int argc, char** argv)
     int ih = image.rows;
     int iw = image.cols;
     string onnxpath = "yolov9c.onnx";
+    float conf_threshold = 0.25;
+    float nms_threshold = 0.4;
+    float score_threshold = 0.25;
     wstring modelPath = wstring(onnxpath.begin(), onnxpath.end());
     SessionOptions session_options;
     Env env = Env(ORT_LOGGING_LEVEL_ERROR, "yolov9-c");
@@ -56,8 +59,8 @@ int main(int argc, char** argv)
     TypeInfo output_type_info = session_.GetOutputTypeInfo(0);
     auto output_tensor_info = output_type_info.GetTensorTypeAndShapeInfo();
     auto output_dims = output_tensor_info.GetShape();
-    output_h = output_dims[1]; 
-    output_w = output_dims[2]; 
+    output_h = output_dims[1];
+    output_w = output_dims[2];
     cout << "output format : HxW = " << output_dims[1] << "x" << output_dims[2] << endl;
     for (int i = 0; i < numOutputNodes; i++) {
         auto out_name = session_.GetOutputNameAllocated(i, allocator);
@@ -100,7 +103,7 @@ int main(int argc, char** argv)
         Point classIdPoint;
         double score;
         minMaxLoc(classes_scores, 0, &score, 0, &classIdPoint);
-        if (score > 0.25)
+        if (score > score_threshold)
         {
             float cx = det_output.at<float>(i, 0);
             float cy = det_output.at<float>(i, 1);
@@ -121,7 +124,7 @@ int main(int argc, char** argv)
         }
     }
     vector<int> indexes;
-    dnn::NMSBoxes(boxes, confidences, 0.25, 0.45, indexes);
+    dnn::NMSBoxes(boxes, confidences, conf_threshold, nms_threshold, indexes);
     for (size_t i = 0; i < indexes.size(); i++) {
         int index = indexes[i];
         int idx = classIds[index];
