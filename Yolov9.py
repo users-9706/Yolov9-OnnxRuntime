@@ -13,8 +13,8 @@ image_height, image_width = image.shape[:2]
 model_path = 'yolov9c.onnx'
 start_time = cv2.getTickCount()
 session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
-conf_thresold = 0.45
-iou_threshold = 0.25
+conf_thresold = 0.25
+iou_threshold = 0.45
 score_thresold = 0.25
 model_inputs = session.get_inputs()
 input_names = [model_inputs[i].name for i in range(len(model_inputs))]
